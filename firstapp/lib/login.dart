@@ -7,7 +7,7 @@ class LoginPage extends StatelessWidget {
       color: const Color.fromARGB(255, 231, 227, 227),
       child: Column(
         children: [
-          Image.asset('assets/images/login.png',fit: BoxFit.cover),
+          Image.asset('assets/images/login.png',fit: BoxFit.fitHeight),
         ],
       ),
     );
