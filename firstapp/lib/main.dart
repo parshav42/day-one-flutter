@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'home.dart';
 import 'login.dart'; // Ensure this import points to the file where LoginPage is defined
+import 'firebase_options.dart'; // Import the generated Firebase options
  // Ensure this import points to the file where LoginPage is defined
 
 void main() async{
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(); // Initialize Firebase if needed
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(MyApp());
 }
 
@@ -29,7 +32,7 @@ class MyApp extends StatelessWidget {
       routes: {
         '/': (context) => LoginPage(),
 
-        '/home': (context) => HomePage(), // Placeholder for home page
+        // '/home': (context) => HomePage(), // Placeholder for home page
 
       },
     );
