@@ -76,7 +76,7 @@ class _SignupPageState extends State<SignupPage> {
                   SizedBox(height: 15),
                   TextButton(
                     onPressed: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => HomePage()));
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => LoginPage()));
                     },
                     child: Text("Already have an account? Login", style: TextStyle(color: Colors.blueGrey)),
                   )
