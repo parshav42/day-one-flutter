@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 class HomePage extends StatelessWidget {
+  const HomePage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -24,10 +26,10 @@ class HomePage extends StatelessWidget {
           padding: EdgeInsets.zero,
           children: <Widget>[
             DrawerHeader(
-              child: Text('Drawer Header', style: TextStyle(color: Colors.white, fontSize: 24)),
               decoration: BoxDecoration(
                 color: Colors.blue,
               ),
+              child: Text('Drawer Header', style: TextStyle(color: Colors.white, fontSize: 24)),
             ),
           ],
         ),
