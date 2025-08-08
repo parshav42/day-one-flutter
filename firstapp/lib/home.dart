@@ -23,15 +23,19 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    productsBox = Hive.box('products');
-    settingsBox = Hive.box('settings');
 
-    // Redirect to login if not logged in
-    bool isLoggedIn = settingsBox.get('isLoggedIn', defaultValue: false);
-    if (!isLoggedIn || user == null) {
+    // ✅ Check if Firebase user exists
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser == null) {
+      // No user logged in → go to login page
       Future.microtask(() {
         Navigator.pushReplacementNamed(context, '/');
       });
+    } else {
+      // Open Hive boxes only if logged in
+      productsBox = Hive.box('products');
+      settingsBox = Hive.box('settings');
     }
   }
 

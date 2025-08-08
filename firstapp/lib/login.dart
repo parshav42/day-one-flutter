@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:hive/hive.dart';
-
+import 'signup.dart';
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
 
@@ -107,13 +107,17 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 10),
               TextButton(
-                onPressed: _toggleMode,
-                child: Text(
-                  isLogin
-                      ? "Don't have an account? Sign up"
-                      : "Already have an account? Login",
-                ),
-              ),
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => SignupPage()),
+    );
+  },
+  child: const Text(
+    "Don't have an account? Sign up",
+  ),
+),
+
             ],
           ),
         ),
