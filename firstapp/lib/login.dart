@@ -1,130 +1,117 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'home.dart';
-import 'signup.dart';
+import 'package:hive/hive.dart';
 
 class LoginPage extends StatefulWidget {
+  const LoginPage({super.key});
+
   @override
-  _LoginPageState createState() => _LoginPageState();
+  State<LoginPage> createState() => _LoginPageState();
 }
 
 class _LoginPageState extends State<LoginPage> {
   final emailController = TextEditingController();
   final passwordController = TextEditingController();
-  final FirebaseAuth _auth = FirebaseAuth.instance;
+  bool isLogin = true;
+  bool loading = false;
 
-  void showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (_) => AlertDialog(
-        title: Text('Login Failed'),
-        content: Text(message),
-        actions: [
-          TextButton(
-              onPressed: () => Navigator.pop(context), child: Text("OK"))
-        ],
-      ),
-    );
+  void _toggleMode() {
+    setState(() => isLogin = !isLogin);
   }
 
-  void login() async {
+  Future<void> _authenticate() async {
+    setState(() => loading = true);
     try {
-      await _auth.signInWithEmailAndPassword(
-        email: emailController.text.trim(),
-        password: passwordController.text.trim(),
-      );
+      UserCredential userCred;
+      if (isLogin) {
+        // Login
+        userCred = await FirebaseAuth.instance.signInWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+      } else {
+        // Sign Up
+        userCred = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+          email: emailController.text.trim(),
+          password: passwordController.text.trim(),
+        );
+      }
 
+      // Save login state
+      final settingsBox = Hive.box('settings');
+      settingsBox.put('isLoggedIn', true);
+
+      if (mounted) {
+        Navigator.pushReplacementNamed(context, '/home');
+      }
+    } on FirebaseAuthException catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Login Successful')),
+        SnackBar(content: Text(e.message ?? "Authentication error")),
       );
-
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomePage()),
-      );
-    } catch (e) {
-      showErrorDialog(e.toString());
+    } finally {
+      setState(() => loading = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // Optional background color or image
       backgroundColor: Colors.grey[100],
       body: Center(
         child: SingleChildScrollView(
-          padding: EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Add image (logo or illustration)
               Image.asset(
-                'assets/images/login.png', // Make sure the image exists in assets
-                height: 150,
+                'assets/images/login.png',
+                height: 120,
               ),
-              SizedBox(height: 30),
-              Card(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16)),
-                elevation: 6,
-                child: Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      Text(
-                        "Welcome Back",
-                        style: TextStyle(
-                            fontSize: 22, fontWeight: FontWeight.bold),
-                      ),
-                      SizedBox(height: 20),
-                      TextField(
-                        controller: emailController,
-                        decoration: InputDecoration(
-                          labelText: "Email",
-                          prefixIcon: Icon(Icons.email),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                      ),
-                      SizedBox(height: 20),
-                      TextField(
-                        controller: passwordController,
-                        decoration: InputDecoration(
-                          labelText: "Password",
-                          prefixIcon: Icon(Icons.lock),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        obscureText: true,
-                      ),
-                      SizedBox(height: 25),
-                      ElevatedButton(
-                        onPressed: login,
-                        style: ElevatedButton.styleFrom(
-                          padding: EdgeInsets.symmetric(
-                              vertical: 12, horizontal: 50),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(10)),
-                        ),
-                        child: Text("Login", style: TextStyle(fontSize: 16)),
-                      ),
-                      SizedBox(height: 10),
-                      TextButton(
-                        onPressed: () {
-                          // Replace with your sign up page
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                                builder: (_) => SignupPage()), // change this later
-                          );
-                        },
-                        child: Text("Don't have an account? Sign up"),
-                      ),
-                    ],
+              const SizedBox(height: 25),
+              Text(
+                isLogin ? "Welcome Back" : "Create Account",
+                style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              TextField(
+                controller: emailController,
+                decoration: const InputDecoration(
+                  labelText: "Email",
+                  prefixIcon: Icon(Icons.email),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 15),
+              TextField(
+                controller: passwordController,
+                obscureText: true,
+                decoration: const InputDecoration(
+                  labelText: "Password",
+                  prefixIcon: Icon(Icons.lock),
+                  border: OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: loading ? null : _authenticate,
+                style: ElevatedButton.styleFrom(
+                  minimumSize: const Size(double.infinity, 50),
+                  backgroundColor: Colors.green,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
                   ),
+                ),
+                child: loading
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : Text(isLogin ? "Login" : "Sign Up",
+                        style: const TextStyle(fontSize: 16)),
+              ),
+              const SizedBox(height: 10),
+              TextButton(
+                onPressed: _toggleMode,
+                child: Text(
+                  isLogin
+                      ? "Don't have an account? Sign up"
+                      : "Already have an account? Login",
                 ),
               ),
             ],
