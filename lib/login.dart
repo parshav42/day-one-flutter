@@ -68,7 +68,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 25),
               Text(
-                isLogin ? "Welcome Back" : "Create Account",
+                isLogin ? "Welcome Back" : "Create first Account",
                 style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 20),
