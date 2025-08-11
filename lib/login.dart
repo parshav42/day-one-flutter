@@ -15,9 +15,9 @@ class _LoginPageState extends State<LoginPage> {
   bool isLogin = true;
   bool loading = false;
 
-  void _toggleMode() {
-    setState(() => isLogin = !isLogin);
-  }
+  // void _toggleMode() {
+  //   setState(() => isLogin = !isLogin);
+  // }
 
   Future<void> _authenticate() async {
     setState(() => loading = true);
@@ -74,6 +74,7 @@ class _LoginPageState extends State<LoginPage> {
               const SizedBox(height: 20),
               TextField(
                 controller: emailController,
+                
                 decoration: const InputDecoration(
                   labelText: "Email",
                   prefixIcon: Icon(Icons.email),

@@ -1,9 +1,11 @@
+import 'dart:convert';
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:hive/hive.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'profile_page.dart'; // <-- Import your ProfilePage
+import 'package:http/http.dart' as http;
+import 'profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -23,17 +25,11 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
-    // ✅ Check if Firebase user exists
-    User? currentUser = FirebaseAuth.instance.currentUser;
-
-    if (currentUser == null) {
-      // No user logged in → go to login page
+    if (user == null) {
       Future.microtask(() {
         Navigator.pushReplacementNamed(context, '/');
       });
     } else {
-      // Open Hive boxes only if logged in
       productsBox = Hive.box('products');
       settingsBox = Hive.box('settings');
     }
@@ -57,7 +53,7 @@ class _HomePageState extends State<HomePage> {
     }
   }
 
-  void _addProduct() {
+  Future<void> _addProduct() async {
     if (nameController.text.trim().isEmpty || _selectedImageBytes == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('⚠ Please enter a name and select an image')),
@@ -65,19 +61,51 @@ class _HomePageState extends State<HomePage> {
       return;
     }
 
-    productsBox.add({
-      'name': nameController.text.trim(),
-      'imageBytes': _selectedImageBytes,
-      'timestamp': DateTime.now().toIso8601String(),
-    });
+    if (user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('❌ User not logged in')),
+      );
+      return;
+    }
 
-    nameController.clear();
-    _selectedImageBytes = null;
-    setState(() {});
-    Navigator.pop(context);
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('✅ Product added successfully!')),
-    );
+    try {
+      final response = await http.post(
+        Uri.parse('http://10.0.2.2:5000/addProduct'), // Localhost for Android Emulator
+        headers: {"Content-Type": "application/json"},
+        body: jsonEncode({
+          "farmer_uid": user!.uid,
+          "product_name": nameController.text.trim(),
+          "image": base64Encode(_selectedImageBytes!),
+          "timestamp": DateTime.now().toIso8601String(),
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('✅ Product added successfully!')),
+        );
+
+        // Save locally for offline mode
+        productsBox.add({
+          'name': nameController.text.trim(),
+          'imageBytes': _selectedImageBytes,
+          'timestamp': DateTime.now().toIso8601String(),
+        });
+
+        nameController.clear();
+        _selectedImageBytes = null;
+        setState(() {});
+        Navigator.pop(context);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('❌ Failed: ${response.body}')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('❌ Error: $e')),
+      );
+    }
   }
 
   void _deleteProduct(int index) {
@@ -152,7 +180,7 @@ class _HomePageState extends State<HomePage> {
             onPressed: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const ProfilePage()), // <-- Navigation
+                MaterialPageRoute(builder: (_) => const ProfilePage()),
               );
             },
           ),
